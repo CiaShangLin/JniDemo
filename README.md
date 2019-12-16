@@ -58,3 +58,8 @@ tv.text=Jni.helloJni()
 就會看到畫面上的TextView變成Hello Jni了
 </pre>
 
+## 配置篇完 ##
+
+## JNI使用介紹篇
+
+
