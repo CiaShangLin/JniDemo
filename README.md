@@ -37,9 +37,10 @@ mac的話則是要用cmd先cd到apk的資料夾然後下unzip APK檔案名稱.ap
 > return env->NewStringUTF("Hello Jni"); 回傳一個jstring的字串,後面會說明<br>
 
 > 11.接著在MainActivity宣告<br>
-***  companion object{
+<pre> companion object{
         init {
             System.loadLibrary("native-lib")
         }
-    } ***
+  }
+<pre>
 
