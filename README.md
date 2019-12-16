@@ -25,7 +25,7 @@ mac的話則是要用cmd先cd到apk的資料夾然後下unzip APK檔案名稱.ap
 > 9.接著new一個Jni.java或Jni.kt的class，名稱不一定要叫做Jni，接著我們隨便需告一個方法，public static native String helloJni();，這裡關鍵就是native這個關鍵字這代表這是一個JNI的方法<p>
 
 > 10.接著到native-lib宣告對應的方法，首先#include <Jni.h>接著來說明一下宣告方法<br>
-![HelloJni](app/image/helloJni.png)<br>
+![HelloJni](app/image/helloJni.png)
 <pre>
 #include <Jni.h> 這個一定要引入
 extern "C"  原因忘了自己Google
@@ -40,7 +40,7 @@ com_example_jnidemo_Jni這個是你放Jni.java或Jni.kt的包名＋Class名稱
 return env->NewStringUTF("Hello Jni"); 回傳一個jstring的字串,後面會說明
 </pre> 
 
-> 11.接著在MainActivity宣告<br>
+> 11.接著在MainActivity宣告,不一定是要靜態的,你也可以在oncreate裡面需告,只要宣告比呼叫方法還早即可
 <pre> 
 Java
 static{
@@ -55,5 +55,6 @@ companion object{
 }
 最後呼叫
 tv.text=Jni.helloJni()
+就會看到畫面上的TextView變成Hello Jni了
 </pre>
 
