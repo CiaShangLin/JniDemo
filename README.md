@@ -80,11 +80,28 @@ tv.text=Jni.helloJni()
 <pre>
 這裡簡單說明一下流程,通常我們會先取得class,取得class的方法分為兩種
 1.env->GetObjectClass(傳入變數)
-  例如:jclass Context_Class=env->GetObjectClass(context);這樣我們就能取得Context的Class了
+  例如:jclass Context_Class = env->GetObjectClass(context);這樣我們就能取得Context的Class了
 2.env->FindClass("class的包名＋名稱")
-  例如:jcalss Context_Class=env->FindClass("android/content/Context");
+  例如:jcalss Context_Class = env->FindClass("android/content/Context");
   這裡有幾點要注意, .要改成/ ,然後object的類別不需要加L和; 這個會在後面的jmethodID說明差異
   這裡有個偷吃步,當你要找Class的包名時就ctrl+左鍵點擊那個你要找的那個型別就會跳轉到那個Class去了,然後往上滾就可以看到package了
+</pre>
+<pre>
+取得了jclass後接下來就是取得方法(jmethodID)或是變數(jfieldID)了
+取得方法這裡要特別注意幾點:
+1.他是要new一個物件出來,還是取得這個方法,還有是不是靜態方法
+  env->GetMethodID(jclass名稱,"方法名稱","(傳入的參數型別簽名...)回傳的型別簽名") ...代表可能會有很多傳入的參數
+  例如:我要初始化一個StringBuffer好了,env->GetMethodID(StringBuffer的class,"<init>","()Ljava/lang/StringBuffer;");
+  只要是建構值他的方法名稱一定是<init>,這是固定的他如果顯示紅字不用屌他,()為空代表他不用傳入任何的變數,Ljava/lang/StringBuffer;代表他回傳的型別
+  這裡要特別注意只要是object型別的,都一定要加L和;結尾,不管是在傳入還是回傳,這個是特別不習慣的地方。
+
+  例如:我要初始化StringBuffer的append的方法,env->GetMethodID(StringBuffer的class,"append","(I)Ljava/lang/StringBuffer;");
+  一般的方法中間就是直接打你要的方法名稱,()內的I代表我要傳入的參數型別,所以到時候呼叫的時候要傳入一個int的型別。
+  
+  靜態方法就是多加一個static,例如:env->GetStaticMethodID()只是多了一個Static其他都跟上面一樣。
+
+取得變數
+
 </pre>
 ![流程介紹](app/image/流程介紹.png)
 > **接著我會示範幾個方法,然後直接在旁邊註解說明,不然寫在這裡實在太痛苦了**
