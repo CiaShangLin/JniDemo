@@ -91,13 +91,13 @@ tv.text=Jni.helloJni()
 取得了jclass後接下來就是取得方法(jmethodID)或是變數(jfieldID)了
 取得方法這裡要特別注意幾點:
 1.他是要new一個物件出來,還是取得這個方法,還有是不是靜態方法
-  env->GetMethodID(jclass名稱,"方法名稱","(傳入的參數型別簽名...)回傳的型別簽名") ...代表可能會有很多傳入的參數
-  例如:我要初始化一個StringBuffer好了,env->GetMethodID(StringBuffer的class,"<init>","()Ljava/lang/StringBuffer;");
-  只要是建構值他的方法名稱一定是<init>,這是固定的他如果顯示紅字不用屌他,()為空代表他不用傳入任何的變數,Ljava/lang/StringBuffer;代表他回傳的型別
-  這裡要特別注意只要是object型別的,都一定要加L和;結尾,不管是在傳入還是回傳,這個是特別不習慣的地方。
+  env->GetMethodID(jclass名稱,"方法名稱","(傳入的參數型別簽名...)回傳的型別簽名"); ...代表可能會有很多傳入的參數
+  例如:我要初始化一個StringBuffer好了,env->GetMethodID(StringBuffer的class,"<init>","()V");
+  只要是建構值他的方法名稱一定是<init>,這是固定的他如果顯示紅字不用屌他,()為空代表他不用傳入任何的變數,只要是建構職他回傳的型別簽名一定是V
 
   例如:我要StringBuffer的append的方法,env->GetMethodID(StringBuffer的class,"append","(I)Ljava/lang/StringBuffer;");
-  一般的方法中間就是直接打你要的方法名稱,()內的I代表我要傳入的參數型別,所以到時候呼叫的時候要傳入一個int的型別。
+  一般的方法中間就是直接打你要的方法名稱,()內的I代表我要傳入的參數型別,()外的代表我要回傳一個StringBuffer不過接收到的型別都會是jobject
+  這裡要特別注意只要是object型別的,都一定要加L和;結尾,不管是在傳入還是回傳,這個是特別不習慣的地方。
   
   靜態方法就是多加一個static,例如:env->GetStaticMethodID()只是多了一個Static其他都跟上面一樣。
 
@@ -108,8 +108,30 @@ tv.text=Jni.helloJni()
 </pre>
 
 <pre>
+取得了jclass和methodID那我們就可以來Call方法來生產出object了
+這裡我們要new StringBuffer然後使用他的append的方法
+Java
+    StringBuffer stringBuffer=new StringBuffer();
+    stringBuffer.append(9453);
+JNI
+    jclass StringBuffer_Class=env->FindClass("java/lang/StringBuffer");
+    jmethodID StringBuffer_init=env->GetMethodID(StringBuffer_Class,"<init>","()V");
+    jobject stringBuffer=env->NewObject(StringBuffer_Class,StringBuffer_init);
+    
+    jmethodID append=env->GetMethodID(StringBuffer_Class,"append","(I)Ljava/lang/StringBuffer;");
+    stringBuffer=env->CallObjectMethod(stringBuffer,append,9453);
+    
+    return stringBuffer;
+這裡要特別注意的是當你是呼叫建構值<init>方法時,你所使用的是NewObject而不是CallObjectMethod,這個是很常犯的錯誤
+當你是CallObjectMethod第一個傳入的參數是jobect型別,這個時候很容易不小心傳入jclass而引發報錯
+JNI DETECTED ERROR IN APPLICATION: 
+can't call java.lang.StringBuffer java.lang.StringBuffer.append(int) on instance of java.lang.Class<java.lang.StringBuffer>
 
+這個方法寫在getStringBuffer()可自行參考
 </pre>
 
 ![流程介紹](app/image/流程介紹.png)
 > **接著我會示範幾個方法,然後直接在旁邊註解說明,不然寫在這裡實在太痛苦了**
+
+## 心得
+> 幹幹幹 先放著

@@ -28,6 +28,20 @@ Java_com_example_jnidemo_Jni_getIMEI(JNIEnv *env, jclass clazz, jobject context)
     env->DeleteLocalRef(setting_class);
     env->DeleteLocalRef(context_class);
     env->DeleteLocalRef(contentResolver);
+
+
+
     return IMEI;
 
+}extern "C"
+JNIEXPORT jobject JNICALL
+Java_com_example_jnidemo_Jni_getStringBuffer(JNIEnv *env, jclass clazz) {
+    jclass StringBuffer_Class=env->FindClass("java/lang/StringBuffer");
+    jmethodID StringBuffer_init=env->GetMethodID(StringBuffer_Class,"<init>","()V");
+    jobject stringBuffer=env->NewObject(StringBuffer_Class,StringBuffer_init);
+
+    jmethodID append=env->GetMethodID(StringBuffer_Class,"append","(I)Ljava/lang/StringBuffer;");
+    stringBuffer=env->CallObjectMethod(StringBuffer_Class,append,9453);
+
+    return stringBuffer;
 }
