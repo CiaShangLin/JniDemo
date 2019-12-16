@@ -69,4 +69,5 @@ tv.text=Jni.helloJni()
 
 > 通常大概就是這三種原因,不然不會沒事發病來寫這個╮(╯_╰)╭<br>
 
-
+> **JNI型別,這個是反射JAVA和Android的關鍵,你會經常使用到這張圖**
+![Jni型別](app/image/Jni型別.png)
