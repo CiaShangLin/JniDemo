@@ -1,7 +1,7 @@
 # JNI入門介紹與配置
 
 ## 配置篇
-> 1.Android Studio 3.5 <p>
+> 1.Android Studio 3.5 kotlin<p>
 > 2.CMAKE,NDK(20.0),LLDB 請到SDK TOOL安裝,在AS右上角那個方塊有一個向下箭頭的 <p>
 ![NDK安裝](app/image/NDK安裝.PNG)
 > 3.以前在New Project有include c++ 但是不知道哪一版開始就消失了 <p>
@@ -42,10 +42,18 @@ return env->NewStringUTF("Hello Jni"); 回傳一個jstring的字串,後面會說
 
 > 11.接著在MainActivity宣告<br>
 <pre> 
+Java
+static{
+    System.loadLibrary("native-lib")
+}
+
+kt
 companion object{
    init {
       System.loadLibrary("native-lib")
    }
 }
+最後呼叫
+tv.text=Jni.helloJni()
 </pre>
 
