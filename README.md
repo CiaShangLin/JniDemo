@@ -72,8 +72,18 @@ tv.text=Jni.helloJni()
 > **JNI型別,這個是反射JAVA和Android的關鍵,你會經常使用到這張圖**
 ![Jni型別](app/image/Jni型別.png)
 > 引用至:https://iter01.com/37255.html<br>
-> 這張圖雖然小了一點但是介紹的比較清楚<br>
+> 這張圖雖然小了一點但是介紹的比較清楚。<br>
 > **基礎型別：** 比較簡單就想成左邊是Java右邊是C就可以了,他們幾乎都只差一個j爾以<br>
-> **引用類型：** 陣列型別比較簡單就是j<Type>Array組成,jstring就等同於Java的String,比較特別是jobject這個通常拿來放你在上面找不到的型別,
-  例如說:Context,StringBuffer,Application之類的<br>
-> **型別的簽名：** 這個主要用於反射的時候,當你要反射JAVA或是Android的時候通常要傳入方法要傳入的型別和回傳的型別,如果有寫過JAVA的反射應該會有點感覺<br>
+> **引用類型：** 陣列型別比較簡單就是jTypeArray組成,jstring就等同於Java的String,比較特別是jobject這個通常拿來放你在上面找不到的型別,
+  例如說:Context,StringBuffer,Application之類的。<br>
+> **型別的簽名：** 這個主要用於反射的時候,當你要反射JAVA或是Android的時候通常要傳入方法要傳入的型別和回傳的型別,如果有寫過JAVA的反射應該會有點感覺。<br>
+<pre>
+這裡簡單說明一下流程,通常我們會先取得class,取得class的方法分為兩種
+1.env->GetObjectClass(傳入變數)
+  例如:jclass Context_Class=env->GetObjectClass(context);這樣我們就能取得Context的Class了
+2.env->FindClass("class的包名＋名稱")
+  例如:jcalss Context_Class=env->FindClass("android/content/Context");
+  這裡有幾點要注意, .要改成/ ,然後object的類別不需要加L和; 這個會在後面的jmethodID說明差異
+  這裡有個偷吃步,當你要找Class的包名時就ctrl+左鍵點擊那個你要找的那個型別就會跳轉到那個Class去了,然後往上滾就可以看到package了
+</pre>
+> **接著我會示範幾個方法,然後直接在旁邊註解說明,不然寫在這裡實在太痛苦了**
