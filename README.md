@@ -7,7 +7,7 @@
 > 3.以前在New Project有include c++ 但是不知道哪一版開始就消失了 <p>
 > 4.接下來New一個JNI的資料夾,對著app右鍵New->Folder->JNI Folder,這個時候會在android層看到一個cpp的資料夾,如果切到project層會看到jni的資料夾 <p>
 ![JNI](app/image/JNI.png)
-> 5.在專案裡面配置NDK,File->Project Structure->SDK Location就會看到NDK Location這時候點▼應該就會看到NDK的位置了<p>這裡有另外一種配置法,在Gradle Scripts裡面有local.properties(SDK Location)寫入sdk.dir=C\:\\Users\\Username\\AppData\\Local\\Android\\Sdk(這個主要是你的NDK的位置)
+> 5.在專案裡面配置NDK,File->Project Structure->SDK Location就會看到NDK Location這時候點▼應該就會看到NDK的位置了<p>這裡有另外一種配置法,在Gradle Scripts裡面有local.properties(SDK Location)寫入sdk.dir=C\:\\Users\\Username\\AppData\\Local\\Android\\Sdk(這個主要是你的NDK的位置)<p>
 > 6.對著cpp(jni)資料夾右鍵New一個File名稱叫做CMakeLists.txt，正常來說你就會看到一個三角形的CMakeLists.txt，詳細請直接去看檔案比較快，不過配置就不多說了因為不會，詳細請自行Google<p>
 > 7.接著切到Project層然後對著jni->New-> C/C++ Source File 名字隨便取這裡我是取native-lib，這個名稱你會在CMakeLists.txt看到<p>
 > 8.接著在build.gradle(Module:app)配置一些東西
@@ -22,7 +22,7 @@ mac的話則是要用cmd先cd到apk的資料夾然後下unzip APK檔案名稱.ap
 那他好像會先找armeabi-v7a的資料夾，詳細先找哪個我忘記了，簡單來說就是如果有這個名稱的資料夾他就會找這個資料夾，如果沒有這個資料夾他則會去找其他她有支援的資料夾<p>
 第三點很簡單就是配置CMakeLists.txt的路徑，這裡要看Project層的路徑為準"src/main/jni/CMakeLists.txt"，所以不是"src/main/cpp/CMakeLists.txt"<p>
 
-> 9.接著new一個Jni.java或Jni.kt的class，名稱不一定要叫做Jni，接著我們隨便需告一個方法，public static native String helloJni();，這裡關鍵就是native這個關鍵字這代表這是一個JNI的方法<p>
+> 9.接著new一個Jni.java或Jni.kt的class，名稱不一定要叫做Jni，接著我們隨便宣告一個方法，public static native String helloJni();，這裡關鍵就是native這個關鍵字這代表這是一個JNI的方法<p>
 
 > 10.接著到native-lib宣告對應的方法，首先#include <Jni.h>接著來說明一下宣告方法<br>
 ![HelloJni](app/image/helloJni.png)
@@ -40,7 +40,7 @@ com_example_jnidemo_Jni這個是你放Jni.java或Jni.kt的包名＋Class名稱
 return env->NewStringUTF("Hello Jni"); 回傳一個jstring的字串,後面會說明
 </pre> 
 
-> 11.接著在MainActivity宣告,不一定是要靜態的,你也可以在oncreate裡面需告,只要宣告比呼叫方法還早即可
+> 11.接著在MainActivity宣告,不一定是要靜態的,你也可以在onCreate裡面宣告,只要宣告比呼叫方法還早即可
 <pre> 
 Java
 static{
@@ -131,7 +131,7 @@ can't call java.lang.StringBuffer java.lang.StringBuffer.append(int) on instance
 </pre>
 
 ![流程介紹](app/image/流程介紹.png)
-> **接著我會示範幾個方法,然後直接在旁邊註解說明,不然寫在這裡實在太痛苦了**
+> **接著我會示範幾個方法,然後直接在旁邊註解說明,不然寫在這裡實在太痛苦了,去看Jni.java然後去native-lib找對應的方法**
 
 ## 心得
 > 幹幹幹 先放著
