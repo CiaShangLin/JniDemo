@@ -26,21 +26,26 @@ mac的話則是要用cmd先cd到apk的資料夾然後下unzip APK檔案名稱.ap
 
 > 10.接著到native-lib宣告對應的方法，首先#include <Jni.h>接著來說明一下宣告方法<br>
 ![HelloJni](app/image/helloJni.png)<br>
-> #include **<Jni.h> 這個一定要引入**<br>
-> extern "C"  **原因忘了自己Google**<br>
-> JNIEXPORT jstring JNICALL  **(JNIEXPORT JNICALL這兩個都是固定這樣寫,jstring則是要回傳給JAVA的型別,型別後面會有圖片說明)**<br>
-> Java_com_example_jnidemo_Jni_helloJni(JNIEnv *env, jclass clazz) {<br>
->    return env->NewStringUTF("Hello Jni");<br>
-> }<br>
-> 需告方法名稱開頭**Java**這個是固定的,**com_example_jnidemo_Jni**這個是你放Jni.java或Jni.kt的包名＋Class名稱,最後就是宣告的方法名稱<br>
-> (JNIEnv *env, jclass clazz)是系統預設導入的,不導入也沒關係<br>
-> return env->NewStringUTF("Hello Jni"); 回傳一個jstring的字串,後面會說明<br>
+<pre>
+#include **<Jni.h> 這個一定要引入**
+extern "C"  **原因忘了自己Google**
+JNIEXPORT jstring JNICALL  **(JNIEXPORT JNICALL這兩個都是固定這樣寫,jstring則是要回傳給JAVA的型別,型別後面會有圖片說明)**
+Java_com_example_jnidemo_Jni_helloJni(JNIEnv *env, jclass clazz) {
+  return env->NewStringUTF("Hello Jni");
+}
+需告方法名稱開頭**Java**這個是固定的
+**com_example_jnidemo_Jni**這個是你放Jni.java或Jni.kt的包名＋Class名稱
+最後就是宣告的方法名稱
+(JNIEnv *env, jclass clazz)是系統預設導入的,不導入也沒關係
+return env->NewStringUTF("Hello Jni"); 回傳一個jstring的字串,後面會說明
+<pre> 
 
 > 11.接著在MainActivity宣告<br>
-<pre> companion object{
-        init {
-            System.loadLibrary("native-lib")
-        }
-  }
+<pre> 
+companion object{
+   init {
+      System.loadLibrary("native-lib")
+   }
+}
 <pre>
 
