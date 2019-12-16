@@ -17,6 +17,6 @@ class MainActivity : AppCompatActivity() {
 
 
 
-        tv.text=Jni.getStringBuffer().toString()
+        tv.text=Jni.getIMEI(this)
     }
 }

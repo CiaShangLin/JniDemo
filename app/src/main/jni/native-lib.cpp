@@ -56,10 +56,19 @@ Java_com_example_jnidemo_Jni_getStringBuffer(JNIEnv *env, jclass clazz) {
     jstring str = (jstring) env->CallObjectMethod(stringBuffer, toString);
 
     //這個是JNI預設的轉型方法jstring to const char*
-    const char *c = env->GetStringUTFChars(str, JNI_FALSE);
+    const char* c =env->GetStringUTFChars(str, JNI_FALSE);
 
     //這個%s不吃jstring
     LOGD("str:%s", c);
+
+    //這個是釋放資源,因為JNI不會自動釋放資源,除了回傳的那個JAVA會自己GC
+    //這個還滿複雜的建議google補充
+    //通常是class和object是DeleteLocalRef
+    //而Get通常會有對應的Release
+    env->DeleteLocalRef(StringBuffer_Class);
+
+
+
     return stringBuffer;
 }
 
@@ -71,12 +80,12 @@ Java_com_example_jnidemo_Jni_getIMEI(JNIEnv *env, jclass clazz, jobject context)
 
 
     //這裡特別注意Secure是Settings裡面的Class所以是用$來連接而不是/
-    jclass setting_class = env->FindClass("android/provider/Settings$Secure");
+    jclass Secure_Class = env->FindClass("android/provider/Settings$Secure");
 
     //要傳入ContentResolver和String 回傳String ;不是分隔號是因為object所以一定要加
     //如果傳入是int跟string回傳是double 那就會是 "(ILjava/lang/String;)D"
     //如果傳入是string跟int回傳是double 那就會是 "(Ljava/lang/String;I)D"傳入的順序不能有錯
-    jmethodID getString = env->GetStaticMethodID(setting_class, "getString",
+    jmethodID getString = env->GetStaticMethodID(Secure_Class, "getString",
                                                  "(Landroid/content/ContentResolver;Ljava/lang/String;)Ljava/lang/String;");
 
     //取得Class的另一種方法
@@ -88,13 +97,18 @@ Java_com_example_jnidemo_Jni_getIMEI(JNIEnv *env, jclass clazz, jobject context)
     jobject contentResolver = env->CallObjectMethod(context, getContentResolver);
 
     //這個是new一個jstring的方法 還有其他方法可以去google找找
+    //這裡算是偷懶 理論上要用jFieldID取得 這裡我是直接回傳這個值
     jstring android_id = env->NewStringUTF("android_id");
+
+    //用jFieldID取得 最後"Ljava/lang/String;"＝要回傳的型別
+    //jfieldID android_id=env->GetStaticFieldID(Secure_Class,"ANDROID_ID","Ljava/lang/String;");
+    //jstring id=(jstring)env->GetStaticObjectField(Secure_Class,android_id);
+
     //getString是靜態方法所以是CallStaticObjectMethod 傳入contentResolver和android_id對應著上面的getString
-    jstring IMEI = (jstring) env->CallStaticObjectMethod(setting_class, getString, contentResolver,
+    jstring IMEI = (jstring) env->CallStaticObjectMethod(Secure_Class, getString, contentResolver,
                                                          android_id);
 
-    env->DeleteLocalRef(android_id);
-    env->DeleteLocalRef(setting_class);
+    env->DeleteLocalRef(Secure_Class);
     env->DeleteLocalRef(context_class);
     env->DeleteLocalRef(contentResolver);
 
