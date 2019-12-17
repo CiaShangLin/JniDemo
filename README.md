@@ -147,4 +147,10 @@ can't call java.lang.StringBuffer java.lang.StringBuffer.append(int) on instance
 > * getKeySha1
 
 ## 心得
-> 幹幹幹 先放著
+<pre>
+    第一次接觸JNI最大的障礙應該是在配置上,最早最早的時期還要配置Android.mk之類的,不過現在沒有配置他也沒關係
+現在Google JNI還是會看到很多include c++和Android.mk之類的文章,include c++都沒了是要怎麼用？
+    如果原先就會C或C++的在寫JNI應該會輕鬆很多,不過通常你要用到JNI不太可能只會用到C跟C++,會用到JAVA跟Android
+的機率也很高最大的難關通常會是在型別簽名的轉換上,其次是java與c的型別轉換,建議是寫個一兩行就可以編譯一次,因為你寫錯
+底下也不會有紅線來提醒你,再來是JNI的例外訊息不是這麼清楚,也不會跟你說是哪一行,很容易寫一寫就不爽起來了。
+</pre>
