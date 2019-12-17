@@ -5,9 +5,44 @@
 //不過這裡的LOG輸出法是C的printf在輸入字串的時候不能用jstring要用char*
 //希望有人可以提供更好用的,不然型別轉來轉去很累
 #include <android/log.h>
-
 #define TAG    "jni-log"
 #define LOGD(...)  __android_log_print(ANDROID_LOG_DEBUG,TAG,__VA_ARGS__)
+
+#include <string.h>   //C的字串函數庫
+#include <malloc.h>   //分配記憶體
+
+#include <string>     //C++的字串
+using namespace std;  //C++
+
+//jstring to char*
+char *Jstring2CStr(JNIEnv *env, jstring jstr) {
+    char *rtn = NULL;
+    jclass clsstring = env->FindClass("java/lang/String");
+    jstring strencode = env->NewStringUTF("GB2312");
+    jmethodID mid = env->GetMethodID(clsstring, "getBytes", "(Ljava/lang/String;)[B");
+    jbyteArray barr = (jbyteArray) env->CallObjectMethod(jstr, mid, strencode);
+    jsize alen = env->GetArrayLength(barr);
+    jbyte *ba = env->GetByteArrayElements(barr, JNI_FALSE);
+    if (alen > 0) {
+        rtn = (char *) malloc(alen + 1);
+        memcpy(rtn, ba, alen);
+        rtn[alen] = 0;
+    }
+    env->ReleaseByteArrayElements(barr, ba, 0);
+    return rtn;
+}
+
+//char轉jstring
+jstring charToJstring(JNIEnv *env, const char *src) {
+    jsize len = strlen(src);
+    jclass clsstring = env->FindClass("java/lang/String");
+    jstring strencode = env->NewStringUTF("UTF-8");
+    jmethodID mid = env->GetMethodID(clsstring, "<init>", "([BLjava/lang/String;)V");
+    jbyteArray barr = env->NewByteArray(len);
+    env->SetByteArrayRegion(barr, 0, len, (jbyte *) src);
+
+    return (jstring) env->NewObject(clsstring, mid, barr, strencode);
+}
 
 extern "C"
 JNIEXPORT jstring JNICALL
@@ -115,4 +150,182 @@ Java_com_example_jnidemo_Jni_getIMEI(JNIEnv *env, jclass clazz, jobject context)
 
     return IMEI;
 
+}
+
+extern "C"
+JNIEXPORT jstring JNICALL
+Java_com_example_jnidemo_Jni_getDeviceName(JNIEnv *env, jclass clazz) {
+
+//    JAVA
+//    String manufacturer = Build.MANUFACTURER;
+//    String model = Build.MODEL;
+//    String str = manufacturer+" "+model;
+
+    //取得Class
+    jclass build = env->FindClass("android/os/Build");
+
+    //取得靜態常數fieldID
+    jfieldID MANUFACTURER_fieldID = env->GetStaticFieldID(build, "MANUFACTURER",
+                                                          "Ljava/lang/String;");
+    //取得靜態常數並且將jobject轉型成jstring
+    jstring MANUFACTURER = (jstring) env->GetStaticObjectField(build, MANUFACTURER_fieldID);
+    //LOGD("MANUFACTURER : %s", env->GetStringUTFChars(MANUFACTURER, 0));
+
+    jfieldID MODEL_fieldID = env->GetStaticFieldID(build, "MODEL", "Ljava/lang/String;");
+    jstring MODEL = (jstring) env->GetStaticObjectField(build, MODEL_fieldID);
+    //LOGD("MODEL : %s", env->GetStringUTFChars(MODEL, 0));
+
+    //偷懶的方法直接取得String的Class
+    jclass string_class = env->GetObjectClass(MODEL);
+    //String的startWith方法
+    jmethodID startWith = env->GetMethodID(string_class, "startsWith", "(Ljava/lang/String;)Z");
+    //這裡特別注意JAVA呼叫起來會是這樣,MODEL.startWith(MANUFACTURER);
+    //第一個是傳入MODEL,而不是傳入class喔
+    //由於startWith是回傳boolean所以你要使用對應Call的方法,否則會拋出例外
+    jboolean result = env->CallBooleanMethod(MODEL, startWith, MANUFACTURER);
+    //LOGD("result:%d", result);
+
+    env->DeleteLocalRef(build);
+    env->DeleteLocalRef(string_class);
+
+    //如果要使用C++的字串,記得要導入<string>和宣告std
+    //字串拼接有幾種方式
+    //1.用C++的string,但是拼接時字串的型別要是char*或是const char*
+    //2.char*或是const char*後面直接+好就可
+    //這裡的jstring並不能向JAVA依樣直接用+號
+    std::string deviceName = "";
+    deviceName = deviceName + " " +Jstring2CStr(env, MODEL)+" "+ Jstring2CStr(env, MANUFACTURER);
+
+    return charToJstring(env, deviceName.c_str());
+}
+
+extern "C"
+JNIEXPORT jstring JNICALL
+Java_com_example_jnidemo_Jni_getVersionName(JNIEnv *env, jclass clazz, jobject context) {
+    jclass context_class = env->GetObjectClass(context);
+    jmethodID methodId = env->GetMethodID(context_class, "getPackageManager",
+                                          "()Landroid/content/pm/PackageManager;");
+    jobject package_manager = env->CallObjectMethod(context, methodId);   //取得PackageManager
+
+    methodId = env->GetMethodID(context_class, "getPackageName", "()Ljava/lang/String;");
+    jstring package_name = (jstring) env->CallObjectMethod(context, methodId);   //取得PackageName
+
+    jclass pack_manager_class = env->GetObjectClass(package_manager);
+    methodId = env->GetMethodID(pack_manager_class, "getPackageInfo",
+                                "(Ljava/lang/String;I)Landroid/content/pm/PackageInfo;");
+    jobject package_info = env->CallObjectMethod(package_manager, methodId, package_name,
+                                                 0);  //取得PackageInfo
+
+    jclass package_info_class = env->GetObjectClass(package_info);
+    jfieldID jfieldId = env->GetFieldID(package_info_class, "versionName", "Ljava/lang/String;");
+    jstring versionName = (jstring) env->GetObjectField(package_info, jfieldId);
+
+    env->DeleteLocalRef(context_class);
+    env->DeleteLocalRef(package_manager);
+    env->DeleteLocalRef(package_info_class);
+    env->DeleteLocalRef(package_info);
+    return versionName;
+}
+
+extern "C"
+JNIEXPORT jstring JNICALL
+Java_com_example_jnidemo_Jni_getKeySha1(JNIEnv *env, jclass clazz, jobject context_object) {
+    //這個是取得app的sha-1 Key,網路上分享看到的程式碼
+    //剛好這個有用到byteArray之類的可以介紹
+    const char hexcode2[] = {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E','F'};
+
+    jclass context_class = env->GetObjectClass(context_object);
+
+    //Java Reflection to get PackageManager
+    jmethodID methodId = env->GetMethodID(context_class, "getPackageManager",
+                                          "()Landroid/content/pm/PackageManager;");
+    jobject package_manager = env->CallObjectMethod(context_object, methodId);
+    if (package_manager == NULL) {
+        LOGD("package_manager is NULL!!!");
+        return NULL;
+    }
+
+    //Java Reflection to get package name
+    methodId = env->GetMethodID(context_class, "getPackageName", "()Ljava/lang/String;");
+    jstring package_name = (jstring) env->CallObjectMethod(context_object, methodId);
+    if (package_name == NULL) {
+        LOGD("package_name is NULL!!!");
+        return NULL;
+    }
+    env->DeleteLocalRef(context_class);
+
+    //Java Reflection to get PackageInfo
+    jclass pack_manager_class = env->GetObjectClass(package_manager);
+    methodId = env->GetMethodID(pack_manager_class, "getPackageInfo",
+                                "(Ljava/lang/String;I)Landroid/content/pm/PackageInfo;");
+    env->DeleteLocalRef(pack_manager_class);
+    jobject package_info = env->CallObjectMethod(package_manager, methodId, package_name, 0x40);
+    if (package_info == NULL) {
+        LOGD("getPackageInfo() is NULL!!!");
+        return NULL;
+    }
+    env->DeleteLocalRef(package_manager);
+
+    //Get signature information
+    jclass package_info_class = env->GetObjectClass(package_info);
+    //這裡 [ 代表他是一個Array陣列的型別
+    jfieldID fieldId = env->GetFieldID(package_info_class, "signatures","[Landroid/content/pm/Signature;");
+    env->DeleteLocalRef(package_info_class);
+    //這裡可以看到轉型成jobjectArray
+    jobjectArray signature_object_array = (jobjectArray) env->GetObjectField(package_info, fieldId);
+    if (signature_object_array == NULL) {
+        LOGD("signature is NULL!!!");
+        return NULL;
+    }
+
+    //好像只有jobject的array可以用GetObjectArrayElement來取得元素,這個等價於signature_object_array[0]
+    //通常如果是jbyteArray[0]你會取得的型別是_jbyteArray這個非常神奇的型別
+    //所以你要先轉型成jbyte* env->GetByteArrayElements(jbyteArray,JNI_FALSE or JNI_TRUE) true或false自行google差異
+    //當你轉型成jbyte*時就可以直接拿元素了 jbyte*[index]
+    //以上的型別可以替換成Boolean int...之類的
+    jobject signature_object = env->GetObjectArrayElement(signature_object_array, 0);
+    env->DeleteLocalRef(package_info);
+
+    //Convert signature information to Sha1
+    jclass signature_class = env->GetObjectClass(signature_object);
+    methodId = env->GetMethodID(signature_class, "toByteArray", "()[B");
+    env->DeleteLocalRef(signature_class);
+    jbyteArray signature_byte = (jbyteArray) env->CallObjectMethod(signature_object, methodId);
+    jclass byte_array_input_class = env->FindClass("java/io/ByteArrayInputStream");
+    methodId = env->GetMethodID(byte_array_input_class, "<init>", "([B)V");
+    jobject byte_array_input = env->NewObject(byte_array_input_class, methodId, signature_byte);
+    jclass certificate_factory_class = env->FindClass("java/security/cert/CertificateFactory");
+    methodId = env->GetStaticMethodID(certificate_factory_class, "getInstance",
+                                      "(Ljava/lang/String;)Ljava/security/cert/CertificateFactory;");
+    jstring x_509_jstring = env->NewStringUTF("X.509");
+    jobject cert_factory = env->CallStaticObjectMethod(certificate_factory_class, methodId,
+                                                       x_509_jstring);
+    methodId = env->GetMethodID(certificate_factory_class, "generateCertificate",
+                                ("(Ljava/io/InputStream;)Ljava/security/cert/Certificate;"));
+    jobject x509_cert = env->CallObjectMethod(cert_factory, methodId, byte_array_input);
+    env->DeleteLocalRef(certificate_factory_class);
+    jclass x509_cert_class = env->GetObjectClass(x509_cert);
+    methodId = env->GetMethodID(x509_cert_class, "getEncoded", "()[B");
+    jbyteArray cert_byte = (jbyteArray) env->CallObjectMethod(x509_cert, methodId);
+    env->DeleteLocalRef(x509_cert_class);
+    jclass message_digest_class = env->FindClass("java/security/MessageDigest");
+    methodId = env->GetStaticMethodID(message_digest_class, "getInstance",
+                                      "(Ljava/lang/String;)Ljava/security/MessageDigest;");
+    jstring sha1_jstring = env->NewStringUTF("SHA1");
+    jobject sha1_digest = env->CallStaticObjectMethod(message_digest_class, methodId, sha1_jstring);
+    methodId = env->GetMethodID(message_digest_class, "digest", "([B)[B");
+    jbyteArray sha1_byte = (jbyteArray) env->CallObjectMethod(sha1_digest, methodId, cert_byte);
+    env->DeleteLocalRef(message_digest_class);
+
+    //Convert to char
+    jsize array_size = env->GetArrayLength(sha1_byte);
+    jbyte *sha1 = env->GetByteArrayElements(sha1_byte, NULL);
+    char *hex_sha = new char[array_size * 2 + 1];
+    for (int i = 0; i < array_size; ++i) {
+        hex_sha[2 * i] = hexcode2[((unsigned char) sha1[i]) / 16];
+        hex_sha[2 * i + 1] = hexcode2[((unsigned char) sha1[i]) % 16];
+    }
+    hex_sha[array_size * 2] = '\0';
+
+    return env->NewStringUTF(hex_sha);
 }

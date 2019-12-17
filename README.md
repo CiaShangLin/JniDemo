@@ -76,7 +76,8 @@ tv.text=Jni.helloJni()
 > **基礎型別：** 比較簡單就想成左邊是Java右邊是C就可以了,他們幾乎都只差一個j爾以<br>
 > **引用類型：** 陣列型別比較簡單就是jTypeArray組成,jstring就等同於Java的String,比較特別是jobject這個通常拿來放你在上面找不到的型別,
   例如說:Context,StringBuffer,Application之類的。<br>
-> **型別的簽名：** 這個主要用於反射的時候,當你要反射JAVA或是Android的時候通常要傳入方法要傳入的型別和回傳的型別,如果有寫過JAVA的反射應該會有點感覺。<br>
+> **型別的簽名：** 這個主要用於反射的時候,當你要反射JAVA或是Android的時候通常要傳入方法要傳入的型別和回傳的型別,如果有寫過JAVA的反射應該會有點感覺。
+    這裡圖片少了一種就是回傳的是陣列型別,只需要加上[就可,例如:回傳IntArray = [I <br>
 <pre>
 這裡簡單說明一下流程,通常我們會先取得class,取得class的方法分為兩種
 1.env->GetObjectClass(傳入變數)
@@ -130,8 +131,20 @@ can't call java.lang.StringBuffer java.lang.StringBuffer.append(int) on instance
 這個方法寫在getStringBuffer()可自行參考
 </pre>
 
+<pre>
+最後當我們取得我們要的物件準備回傳時,在回傳之前記得釋放你宣告的class,object,string,array之類的
+因為JNI並不會自動幫我們釋放,如果都不釋放的話有機率發生OOM的問題
+這個部分建議自行google比較詳細
+</pre>
+
 ![流程介紹](app/image/流程介紹.png)
 > **接著我會示範幾個方法,然後直接在旁邊註解說明,不然寫在這裡實在太痛苦了,去看Jni.java然後去native-lib找對應的方法**
+> * helloJni
+> * getStringBuffer
+> * getIMEI
+> * getDeviceName
+> * getVersionName
+> * getKeySha1
 
 ## 心得
 > 幹幹幹 先放著

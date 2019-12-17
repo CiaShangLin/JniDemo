@@ -1,6 +1,7 @@
 package com.example.jnidemo;
 
 import android.content.Context;
+import android.os.Build;
 import android.provider.Settings;
 
 public class S {
@@ -10,5 +11,9 @@ public class S {
         stringBuffer.toString();
 
         //String id = Settings.Secure.getString(MainActivity.this.getContentResolver(), Settings.Secure.ANDROID_ID);
+
+
+        String manufacturer = Build.MANUFACTURER;
+        String model = Build.MODEL;
     }
 }
