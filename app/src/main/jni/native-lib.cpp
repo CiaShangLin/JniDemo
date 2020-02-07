@@ -5,6 +5,7 @@
 //不過這裡的LOG輸出法是C的printf在輸入字串的時候不能用jstring要用char*
 //希望有人可以提供更好用的,不然型別轉來轉去很累
 #include <android/log.h>
+
 #define TAG    "jni-log"
 #define LOGD(...)  __android_log_print(ANDROID_LOG_DEBUG,TAG,__VA_ARGS__)
 
@@ -12,7 +13,14 @@
 #include <malloc.h>   //分配記憶體
 
 #include <string>     //C++的字串
+
+#include <random>
+
+#include "Version.cpp"
+
 using namespace std;  //C++
+
+static jboolean IS_DEV = false;
 
 //jstring to char*
 char *Jstring2CStr(JNIEnv *env, jstring jstr) {
@@ -91,7 +99,7 @@ Java_com_example_jnidemo_Jni_getStringBuffer(JNIEnv *env, jclass clazz) {
     jstring str = (jstring) env->CallObjectMethod(stringBuffer, toString);
 
     //這個是JNI預設的轉型方法jstring to const char*
-    const char* c =env->GetStringUTFChars(str, JNI_FALSE);
+    const char *c = env->GetStringUTFChars(str, JNI_FALSE);
 
     //這個%s不吃jstring
     LOGD("str:%s", c);
@@ -101,7 +109,6 @@ Java_com_example_jnidemo_Jni_getStringBuffer(JNIEnv *env, jclass clazz) {
     //通常是class和object是DeleteLocalRef
     //而Get通常會有對應的Release
     env->DeleteLocalRef(StringBuffer_Class);
-
 
 
     return stringBuffer;
@@ -194,7 +201,8 @@ Java_com_example_jnidemo_Jni_getDeviceName(JNIEnv *env, jclass clazz) {
     //2.char*或是const char*後面直接+好就可
     //這裡的jstring並不能向JAVA依樣直接用+號
     std::string deviceName = "";
-    deviceName = deviceName + " " +Jstring2CStr(env, MODEL)+" "+ Jstring2CStr(env, MANUFACTURER);
+    deviceName =
+            deviceName + " " + Jstring2CStr(env, MODEL) + " " + Jstring2CStr(env, MANUFACTURER);
 
     return charToJstring(env, deviceName.c_str());
 }
@@ -232,7 +240,8 @@ JNIEXPORT jstring JNICALL
 Java_com_example_jnidemo_Jni_getKeySha1(JNIEnv *env, jclass clazz, jobject context_object) {
     //這個是取得app的sha-1 Key,網路上分享看到的程式碼
     //剛好這個有用到byteArray之類的可以介紹
-    const char hexcode2[] = {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E','F'};
+    const char hexcode2[] = {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D',
+                             'E', 'F'};
 
     jclass context_class = env->GetObjectClass(context_object);
 
@@ -269,7 +278,8 @@ Java_com_example_jnidemo_Jni_getKeySha1(JNIEnv *env, jclass clazz, jobject conte
     //Get signature information
     jclass package_info_class = env->GetObjectClass(package_info);
     //這裡 [ 代表他是一個Array陣列的型別
-    jfieldID fieldId = env->GetFieldID(package_info_class, "signatures","[Landroid/content/pm/Signature;");
+    jfieldID fieldId = env->GetFieldID(package_info_class, "signatures",
+                                       "[Landroid/content/pm/Signature;");
     env->DeleteLocalRef(package_info_class);
     //這裡可以看到轉型成jobjectArray
     jobjectArray signature_object_array = (jobjectArray) env->GetObjectField(package_info, fieldId);
@@ -328,4 +338,174 @@ Java_com_example_jnidemo_Jni_getKeySha1(JNIEnv *env, jclass clazz, jobject conte
     hex_sha[array_size * 2] = '\0';
 
     return env->NewStringUTF(hex_sha);
+}
+
+extern "C"
+JNIEXPORT jint JNICALL
+Java_com_example_jnidemo_Jni_getVersionCode(JNIEnv *env, jclass clazz, jobject context) {
+    jclass context_class = env->GetObjectClass(context);
+    jmethodID methodId = env->GetMethodID(context_class, "getPackageManager",
+                                          "()Landroid/content/pm/PackageManager;");
+    jobject package_manager = env->CallObjectMethod(context, methodId);   //取得PackageManager
+
+    methodId = env->GetMethodID(context_class, "getPackageName", "()Ljava/lang/String;");
+    jstring package_name = (jstring) env->CallObjectMethod(context, methodId);   //取得PackageName
+
+    jclass pack_manager_class = env->GetObjectClass(package_manager);
+    methodId = env->GetMethodID(pack_manager_class, "getPackageInfo",
+                                "(Ljava/lang/String;I)Landroid/content/pm/PackageInfo;");
+    jobject package_info = env->CallObjectMethod(package_manager, methodId, package_name,
+                                                 0);  //取得PackageInfo
+
+    jclass package_info_class = env->GetObjectClass(package_info);
+    jfieldID jfieldId = env->GetFieldID(package_info_class, "versionCode", "I");
+    jint versionCode = env->GetIntField(package_info, jfieldId);
+
+    env->DeleteLocalRef(context_class);
+    env->DeleteLocalRef(package_manager);
+    env->DeleteLocalRef(package_info_class);
+    env->DeleteLocalRef(package_info);
+
+    return versionCode;
+}
+extern "C"
+JNIEXPORT jstring JNICALL
+Java_com_example_jnidemo_Jni_versionCypto(JNIEnv *env, jclass clazz, jobject context) {
+    int number = 0;
+    jstring appName = env->NewStringUTF("AvNight");
+    jstring versionName = getVersionName(env, context);
+    jint versionCode = getVersionCode(env, context);
+
+    jclass String_Class = env->FindClass("java/lang/String");
+    jmethodID charAt = env->GetMethodID(String_Class, "charAt", "(I)C");
+
+
+    int appNameLength = env->GetStringUTFLength(appName);
+    for (int i = 0; i < appNameLength; i++) {
+        char c = env->CallCharMethod(appName, charAt, i);
+        number += (int) c;
+    }
+
+    int versionLength = env->GetStringUTFLength(versionName);
+    for (int i = 0; i < versionLength; i++) {
+        char c = env->CallCharMethod(versionName, charAt, i);
+        number += (int) c;
+    }
+
+    number += versionCode;
+    jclass Int_Class = env->FindClass("java/lang/Integer");
+    jmethodID toHexString = env->GetStaticMethodID(Int_Class, "toHexString",
+                                                   "(I)Ljava/lang/String;");
+
+    jstring str = (jstring) env->CallStaticObjectMethod(Int_Class, toHexString, number);
+
+    env->DeleteLocalRef(String_Class);
+    env->DeleteLocalRef(Int_Class);
+
+    return str;
+}
+
+extern "C"
+JNIEXPORT jstring JNICALL
+Java_com_example_jnidemo_Jni_versionCypto2(JNIEnv *env, jclass clazz, jobject context) {
+
+    jstring versionName = getVersionName(env, context);
+    jint versionCode = getVersionCode(env, context);
+
+    jclass StringBuilder_Class = env->FindClass("java/lang/StringBuilder");
+    jmethodID init = env->GetMethodID(StringBuilder_Class, "<init>", "()V");
+    jmethodID append = env->GetMethodID(StringBuilder_Class, "append",
+                                        "(I)Ljava/lang/StringBuilder;");
+    jmethodID toString = env->GetMethodID(StringBuilder_Class, "toString",
+                                          "()Ljava/lang/String;");
+
+    jobject stringBuilder = env->NewObject(StringBuilder_Class, init);
+
+    jclass String_Class = env->FindClass("java/lang/String");
+    jmethodID charAt = env->GetMethodID(String_Class, "charAt", "(I)C");
+
+    int versionLength = env->GetStringUTFLength(versionName);
+    for (int i = 0; i < versionLength; i++) {
+        char c = env->CallCharMethod(versionName, charAt, i);
+        if (c != '.') {
+            stringBuilder = env->CallObjectMethod(stringBuilder, append, (int) c);
+        }
+    }
+    stringBuilder = env->CallObjectMethod(stringBuilder, append, versionCode);
+
+
+    jclass Int_Class = env->FindClass("java/lang/Integer");
+    jmethodID toHexString = env->GetStaticMethodID(Int_Class, "toHexString","(I)Ljava/lang/String;");
+    jmethodID parseInt = env->GetStaticMethodID(Int_Class, "parseInt", "(Ljava/lang/String;)I");
+
+    jstring j = (jstring) env->CallObjectMethod(stringBuilder, toString);
+    int number = env->CallStaticIntMethod(Int_Class, parseInt, j);
+    jstring hex = (jstring) env->CallStaticObjectMethod(Int_Class, toHexString, number);
+
+    env->DeleteLocalRef(StringBuilder_Class);
+    env->DeleteLocalRef(String_Class);
+    env->DeleteLocalRef(Int_Class);
+    env->DeleteLocalRef(stringBuilder);
+
+    return hex;
+}
+
+
+
+extern "C"
+JNIEXPORT jstring JNICALL
+Java_com_example_jnidemo_Jni_DexSize(JNIEnv *env, jclass clazz, jobject context) {
+
+    jclass context_class = env->GetObjectClass(context);
+    jmethodID getPackageCodePath = env->GetMethodID(context_class, "getPackageCodePath",
+                                                    "()Ljava/lang/String;");
+    jstring packageCodePath = (jstring) env->CallObjectMethod(context, getPackageCodePath);
+
+    jclass zipFile_class = env->FindClass("java/util/zip/ZipFile");
+    jmethodID zipFile_init = env->GetMethodID(zipFile_class, "<init>",
+                                              "(Ljava/lang/String;)V");   //V=Void 建構值是Ｖ
+    jobject zipFile = env->NewObject(zipFile_class, zipFile_init,
+                                     packageCodePath);                //對應要用NewObject
+
+    jmethodID getEntry = env->GetMethodID(zipFile_class, "getEntry",
+                                          "(Ljava/lang/String;)Ljava/util/zip/ZipEntry;");  //有Ｌ結尾就要加;號 L=Object
+    jstring name = env->NewStringUTF("classes.dex");
+    jobject zipEntry = env->CallObjectMethod(zipFile, getEntry, name);
+
+    jclass zipEntry_class = env->GetObjectClass(zipEntry);
+    jmethodID getSize = env->GetMethodID(zipEntry_class, "getSize", "()J");
+    jlong size = env->CallLongMethod(zipEntry, getSize);
+    //LOGD("getSize:%ld",size);
+
+    jclass long_class = env->FindClass("java/lang/Long");
+    jmethodID toHexString = env->GetStaticMethodID(long_class, "toHexString",
+                                                   "(J)Ljava/lang/String;");
+    jstring sizeToHex = (jstring) env->CallStaticObjectMethod(long_class, toHexString, size);
+    //LOGD("getSizeToHex=%s", Jstring2CStr(env, sizeToHex));
+
+
+    env->DeleteLocalRef(context_class);
+    env->DeleteLocalRef(zipFile_class);
+    env->DeleteLocalRef(zipFile);
+    env->DeleteLocalRef(zipEntry);
+    env->DeleteLocalRef(zipEntry_class);
+    env->DeleteLocalRef(long_class);
+
+    return sizeToHex;
+
+}
+
+
+extern "C"
+JNIEXPORT jint JNI_OnLoad(JavaVM *vm, void *reserved) {
+
+
+    JNIEnv *env;
+
+    if (vm->GetEnv(reinterpret_cast<void **>(&env), JNI_VERSION_1_6) != JNI_OK) {
+        return JNI_ERR;
+    }
+
+
+    return JNI_VERSION_1_6;
 }

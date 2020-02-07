@@ -15,5 +15,12 @@ public class S {
 
         String manufacturer = Build.MANUFACTURER;
         String model = Build.MODEL;
+
+        String name="123";
+        name.charAt(0);
+
+
+        StringBuilder stringBuilder=new StringBuilder("");
+
     }
 }

@@ -9,4 +9,12 @@ public class Jni {
     public static native String getDeviceName();
     public static native String getVersionName(Context context);
     public static native String getKeySha1(Context context);
+    public static native int getVersionCode(Context context);
+
+
+    public static native String DexSize(Context context);
+
+    public static native String versionCypto(Context context);
+    public static native String versionCypto2(Context context);
+
 }

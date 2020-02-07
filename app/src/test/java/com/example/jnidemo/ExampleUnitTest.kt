@@ -11,7 +11,46 @@ import org.junit.Assert.*
  */
 class ExampleUnitTest {
     @Test
-    fun addition_isCorrect() {
-        assertEquals(4, 2 + 2)
+    fun first() {
+        var appName: String = "wqeqwe"
+        var versionName: String = "2.17.0"
+        var versionCode: Int = 181
+
+        var number = 0
+        appName.forEach {
+            number += it.toInt()
+        }
+
+        versionName.forEach {
+            number += it.toInt()
+        }
+        number += versionCode
+
+        println("-----first-----")
+        println("number=$number")
+        println(Integer.toHexString(number))
+        println("---------------")
+
     }
+
+    @Test
+    fun second() {
+
+        var versionName: String = "2.17.0"
+        var versionCode: Int = 181
+
+        var number = ""
+        versionName.forEach {
+            if (it != '.')
+                number += it.toInt()
+        }
+        var a:String=(number.toInt()+versionCode).toString()
+
+        println("-----second-----")
+        println("number=$a")
+        println(Integer.toHexString(a.toInt()))
+        println("---------------")
+    }
+
+
 }

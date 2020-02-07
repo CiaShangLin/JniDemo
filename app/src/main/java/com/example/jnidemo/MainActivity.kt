@@ -1,9 +1,11 @@
 package com.example.jnidemo
 
-import androidx.appcompat.app.AppCompatActivity
+import android.content.pm.ApplicationInfo
 import android.os.Bundle
 import android.util.Log
-import kotlinx.android.synthetic.main.activity_main.*
+import androidx.appcompat.app.AppCompatActivity
+import java.io.File
+
 
 class MainActivity : AppCompatActivity() {
 
@@ -23,5 +25,17 @@ class MainActivity : AppCompatActivity() {
         Log.d("TAG", "getDeviceName:" + Jni.getDeviceName())
         Log.d("TAG", "getVersionName:" + Jni.getVersionName(this))
         Log.d("TAG", "getKeySha1:" + Jni.getKeySha1(this))
+        Log.d("TAG", "getVersionCode:" + Jni.getVersionCode(this))
+        Log.d("TAG", "DexSize:" + Jni.DexSize(this))
+        Log.d("TAG", "versionCypto:" + Jni.versionCypto(this))
+        Log.d("TAG", "versionCypto2:" + Jni.versionCypto2(this))
+
+        Log.d("TAG",application.applicationInfo.flags.toString())
+        Log.d("TAG", ApplicationInfo.FLAG_DEBUGGABLE.toString())
+        var isDebug:Boolean= (ApplicationInfo.FLAG_DEBUGGABLE and application.applicationInfo.flags)!=0
+        Log.d("TAG", isDebug.toString())
+
+
+
     }
 }
