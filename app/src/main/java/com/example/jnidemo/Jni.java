@@ -1,5 +1,6 @@
 package com.example.jnidemo;
 
+import android.app.Application;
 import android.content.Context;
 
 public class Jni {
@@ -17,4 +18,15 @@ public class Jni {
     public static native String versionCypto(Context context);
     public static native String versionCypto2(Context context);
 
+    public static native boolean isDebug(Application application);
+
+    public static native void firebaseNDKCrash();
+
+    public static native boolean getApplication(Context context);
+
+
+    public static native void throwExcetion();
+
+
+    public static native String getHost();
 }

@@ -435,7 +435,8 @@ Java_com_example_jnidemo_Jni_versionCypto2(JNIEnv *env, jclass clazz, jobject co
 
 
     jclass Int_Class = env->FindClass("java/lang/Integer");
-    jmethodID toHexString = env->GetStaticMethodID(Int_Class, "toHexString","(I)Ljava/lang/String;");
+    jmethodID toHexString = env->GetStaticMethodID(Int_Class, "toHexString",
+                                                   "(I)Ljava/lang/String;");
     jmethodID parseInt = env->GetStaticMethodID(Int_Class, "parseInt", "(Ljava/lang/String;)I");
 
     jstring j = (jstring) env->CallObjectMethod(stringBuilder, toString);
@@ -508,4 +509,103 @@ JNIEXPORT jint JNI_OnLoad(JavaVM *vm, void *reserved) {
 
 
     return JNI_VERSION_1_6;
+}
+extern "C"
+JNIEXPORT jboolean JNICALL
+Java_com_example_jnidemo_Jni_isDebug(JNIEnv *env, jclass clazz, jobject application) {
+
+
+    jclass ApplicationInfo_Class = env->FindClass("android/content/pm/ApplicationInfo");
+    jfieldID FLAG_DEBUGGABLE = env->GetStaticFieldID(ApplicationInfo_Class, "FLAG_DEBUGGABLE", "I");
+    int d = env->GetStaticIntField(ApplicationInfo_Class, FLAG_DEBUGGABLE);
+    LOGD("FLAG_DEBUGGABLE=%d", d);
+
+    jclass context_Class = env->FindClass("android/content/ContextWrapper");
+    jmethodID getApplicationInfo = env->GetMethodID(context_Class, "getApplicationInfo",
+                                                    "()Landroid/content/pm/ApplicationInfo;");
+    jobject applicationInfo = env->CallObjectMethod(application, getApplicationInfo);
+
+    jfieldID flags = env->GetFieldID(ApplicationInfo_Class, "flags", "I");
+    int f = env->GetIntField(applicationInfo, flags);
+    LOGD("FLAG=%d", f);
+
+    jboolean isDebug = ((f & d) != 0);
+
+    return isDebug;
+
+}
+
+
+extern "C"
+JNIEXPORT void JNICALL
+Java_com_example_jnidemo_Jni_firebaseNDKCrash(JNIEnv *env, jclass clazz) {
+
+}
+
+extern "C"
+JNIEXPORT jboolean JNICALL
+Java_com_example_jnidemo_Jni_getApplication(JNIEnv *env, jclass clazz, jobject context) {
+    jclass context_class = env->GetObjectClass(context);
+    jmethodID methodId = env->GetMethodID(context_class, "getPackageManager",
+                                          "()Landroid/content/pm/PackageManager;");
+    jobject package_manager = env->CallObjectMethod(context, methodId);   //取得PackageManager
+
+    methodId = env->GetMethodID(context_class, "getPackageName", "()Ljava/lang/String;");
+    jstring package_name = (jstring) env->CallObjectMethod(context, methodId);   //取得PackageName
+
+    jclass pack_manager_class = env->GetObjectClass(package_manager);
+    methodId = env->GetMethodID(pack_manager_class, "getApplicationInfo",
+                                "(Ljava/lang/String;I)Landroid/content/pm/ApplicationInfo;");
+    jobject package_info = env->CallObjectMethod(package_manager, methodId, package_name,
+                                                 0);  //取得PackageInfo
+
+    jclass package_info_class = env->GetObjectClass(package_info);
+    jfieldID jfieldId = env->GetFieldID(package_info_class, "className", "Ljava/lang/String;");
+    jstring className = (jstring) env->GetObjectField(package_info, jfieldId);
+
+    LOGD("%s", Jstring2CStr(env, className));
+    jboolean app =
+            strcmp(Jstring2CStr(env, className), "com.example.jnidemo.JniDemoApplication") == 0;
+
+//    env->DeleteLocalRef(context_class);
+//    env->DeleteLocalRef(package_manager);
+//    env->DeleteLocalRef(package_info_class);
+//    env->DeleteLocalRef(package_info);
+
+
+    return app;
+
+}
+
+extern "C"
+JNIEXPORT void JNICALL
+Java_com_example_jnidemo_Jni_throwExcetion(JNIEnv *env, jclass clazz) {
+    jclass newExcCls = env->FindClass("java/lang/IllegalArgumentException");
+    env->ThrowNew(newExcCls, "123");
+}
+
+extern "C"
+JNIEXPORT jstring JNICALL
+Java_com_example_jnidemo_Jni_getHost(JNIEnv *env, jclass clazz) {
+    //取得Class
+    jclass apiServiceManager_class = env->FindClass("com/example/jnidemo/ApiServiceManager");
+
+    //取得靜態變數INSTANCE
+    jfieldID INSTANCE_ID = env->GetStaticFieldID(apiServiceManager_class, "INSTANCE",
+                                              "Lcom/example/jnidemo/ApiServiceManager;");
+
+    //取得靜態變數實體
+    jobject INSTANCE = env->GetStaticObjectField(apiServiceManager_class, INSTANCE_ID);
+
+    //取得方法
+    jmethodID getHostMethID = env->GetMethodID(apiServiceManager_class, "getHOST", "()Ljava/lang/String;");
+
+    //呼叫方法
+    jstring host=(jstring)env->CallObjectMethod(INSTANCE,getHostMethID);
+
+    //釋放
+    env->DeleteLocalRef(apiServiceManager_class);
+    env->DeleteLocalRef(INSTANCE);
+
+    return host;
 }
