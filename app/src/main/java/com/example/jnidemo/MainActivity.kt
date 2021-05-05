@@ -1,6 +1,7 @@
 package com.example.jnidemo
 
 import android.content.Context
+import android.content.pm.ApplicationInfo
 import android.os.Bundle
 import android.provider.Settings
 import android.telephony.TelephonyManager
@@ -22,7 +23,7 @@ class MainActivity : AppCompatActivity() {
 
         try {
             Jni.throwExcetion()
-        }catch (e:Exception){
+        } catch (e: Exception) {
             e.printStackTrace()
         }
 
@@ -38,11 +39,13 @@ class MainActivity : AppCompatActivity() {
         Log.d("TAG", "versionCypto2:" + Jni.versionCypto2(this))
         Log.d("TAG", "isDebug:" + Jni.isDebug(this.application))
         var id = Settings.Secure.getString(contentResolver, Settings.Secure.ANDROID_ID);
-        Log.d("TAG",id)
-        var p =packageManager.getApplicationInfo(packageName,0)
-        Log.d("DEBUG",p.className)
-        Log.d("DEBUG",Jni.getApplication(this).toString())
+        Log.d("TAG", id)
+        var p = packageManager.getApplicationInfo(packageName, 0)
+        Log.d("TAG", p.className)
+        Log.d("TAG", Jni.getApplication(this).toString())
+        Log.d("TAG",Jni.getHost())
 
-        Log.d("DEBUG",Jni.getHost())
+        Log.d("TAG",Jni.getModel())
+
     }
 }

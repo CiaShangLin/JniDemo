@@ -592,20 +592,33 @@ Java_com_example_jnidemo_Jni_getHost(JNIEnv *env, jclass clazz) {
 
     //取得靜態變數INSTANCE
     jfieldID INSTANCE_ID = env->GetStaticFieldID(apiServiceManager_class, "INSTANCE",
-                                              "Lcom/example/jnidemo/ApiServiceManager;");
+                                                 "Lcom/example/jnidemo/ApiServiceManager;");
 
     //取得靜態變數實體
     jobject INSTANCE = env->GetStaticObjectField(apiServiceManager_class, INSTANCE_ID);
 
     //取得方法
-    jmethodID getHostMethID = env->GetMethodID(apiServiceManager_class, "getHOST", "()Ljava/lang/String;");
+    jmethodID getHostMethID = env->GetMethodID(apiServiceManager_class, "getHOST",
+                                               "()Ljava/lang/String;");
 
     //呼叫方法
-    jstring host=(jstring)env->CallObjectMethod(INSTANCE,getHostMethID);
+    jstring host = (jstring) env->CallObjectMethod(INSTANCE, getHostMethID);
 
     //釋放
     env->DeleteLocalRef(apiServiceManager_class);
     env->DeleteLocalRef(INSTANCE);
 
     return host;
+}
+
+
+extern "C"
+JNIEXPORT jstring JNICALL
+Java_com_example_jnidemo_Jni_getModel(JNIEnv *env, jclass clazz) {
+
+    jclass modelClass = env->FindClass("com/example/jnidemo/Model");
+    jfieldID jfieldId = env->GetStaticFieldID(modelClass, "model", "Ljava/lang/String;");
+    jstring str = (jstring) env->GetStaticObjectField(modelClass, jfieldId);
+
+    return str;
 }
