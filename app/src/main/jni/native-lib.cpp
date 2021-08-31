@@ -13,6 +13,7 @@
 #include <malloc.h>   //分配記憶體
 
 #include <string>     //C++的字串
+#include <array>
 
 #include <random>
 
@@ -622,3 +623,59 @@ Java_com_example_jnidemo_Jni_getModel(JNIEnv *env, jclass clazz) {
 
     return str;
 }
+
+
+static array<string, 9> virtualPkgs = {
+        "com.bly.dkplat",
+        "dkplugin.pke.nnp",
+        "com.by.chaos",
+        "com.lbe.parallel",
+        "com.excelliance.dualaid",
+        "com.lody.virtual",
+        "com.qihoo.magic",
+        "multi.parallel.dualspace.cloner",
+        "com.polar.apps.dual.multi.accounts"
+};
+
+extern "C"
+JNIEXPORT jboolean JNICALL
+Java_com_example_jnidemo_Jni_isMultiApp(JNIEnv *env, jclass clazz, jobject context) {
+
+    bool isMultiApp = false;
+
+    jclass contextClass = env->GetObjectClass(context);
+    jmethodID filesDir = env->GetMethodID(contextClass, "getFilesDir", "()Ljava/io/File;");
+    jobject file = env->CallObjectMethod(context, filesDir);
+
+    jclass fileClass = env->FindClass("java/io/File");
+    jmethodID getPath = env->GetMethodID(fileClass, "getPath", "()Ljava/lang/String;");
+
+    jstring path = (jstring) env->CallObjectMethod(file, getPath);
+
+    const char *cPath = env->GetStringUTFChars(path, NULL);
+
+    if (cPath == NULL) {
+        env->DeleteLocalRef(contextClass);
+        env->DeleteLocalRef(file);
+        env->DeleteLocalRef(fileClass);
+        return false;
+    }
+
+    for (int i = 0; i < virtualPkgs.size(); i++) {
+        if (strstr(cPath, virtualPkgs[i].c_str()) != NULL) {
+            isMultiApp = true;
+            env->DeleteLocalRef(contextClass);
+            env->DeleteLocalRef(file);
+            env->DeleteLocalRef(fileClass);
+            env->ReleaseStringUTFChars(path, cPath);
+            return isMultiApp;
+        }
+    }
+
+    env->DeleteLocalRef(contextClass);
+    env->DeleteLocalRef(file);
+    env->DeleteLocalRef(fileClass);
+    env->ReleaseStringUTFChars(path, cPath);
+    return isMultiApp;
+}
+

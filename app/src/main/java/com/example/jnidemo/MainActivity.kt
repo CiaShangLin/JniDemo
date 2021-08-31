@@ -3,10 +3,15 @@ package com.example.jnidemo
 import android.content.Context
 import android.content.pm.ApplicationInfo
 import android.os.Bundle
+import android.os.Process
 import android.provider.Settings
 import android.telephony.TelephonyManager
 import android.util.Log
 import androidx.appcompat.app.AppCompatActivity
+import java.io.BufferedReader
+import java.io.File
+import java.io.FileReader
+import java.io.IOException
 
 
 class MainActivity : AppCompatActivity() {
@@ -43,9 +48,10 @@ class MainActivity : AppCompatActivity() {
         var p = packageManager.getApplicationInfo(packageName, 0)
         Log.d("TAG", p.className)
         Log.d("TAG", Jni.getApplication(this).toString())
-        Log.d("TAG",Jni.getHost())
+        Log.d("TAG", Jni.getHost())
 
-        Log.d("TAG",Jni.getModel())
+        Log.d("TAG", Jni.getModel())
 
+        Log.d("TAG", "isMultiApp:" + Jni.isMultiApp(this).toString())
     }
 }

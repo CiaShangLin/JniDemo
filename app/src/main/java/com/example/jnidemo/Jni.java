@@ -40,4 +40,5 @@ public class Jni {
 
     public static native String getModel();
 
+    public static native boolean isMultiApp(Context context);
 }
