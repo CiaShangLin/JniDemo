@@ -41,4 +41,8 @@ public class Jni {
     public static native String getModel();
 
     public static native boolean isMultiApp(Context context);
+
+    public static native void sharedCommit(Context context);
+
+    public static native boolean shared_get(Context context);
 }

@@ -679,3 +679,107 @@ Java_com_example_jnidemo_Jni_isMultiApp(JNIEnv *env, jclass clazz, jobject conte
     return isMultiApp;
 }
 
+
+jboolean findMagisk(JNIEnv *env, jobject context) {
+    jclass Context_Class = env->GetObjectClass(context);
+    jmethodID getPackageManager = env->GetMethodID(Context_Class, "getPackageManager",
+                                                   "()Landroid/content/pm/PackageManager;");
+    jobject packageManager = env->CallObjectMethod(context, getPackageManager);
+
+    jclass PackageManager_Class = env->GetObjectClass(packageManager);
+    jmethodID getInstalledApplications = env->GetMethodID(PackageManager_Class,
+                                                          "getInstalledApplications",
+                                                          "(I)Ljava/util/List;");
+    jobject applicationInfoList = env->CallObjectMethod(packageManager, getInstalledApplications,
+                                                        0x00000080);
+
+    jclass List_Class = env->GetObjectClass(applicationInfoList);
+    jmethodID size_ID = env->GetMethodID(List_Class, "size", "()I");
+    jmethodID get_ID = env->GetMethodID(List_Class, "get", "(I)Ljava/lang/Object;");
+
+    jint size = env->CallIntMethod(applicationInfoList, size_ID);
+
+    jboolean find = false;
+    for (int i = 0; i < size; i++) {
+        jobject application = env->CallObjectMethod(applicationInfoList, get_ID, i);
+        jclass Application_Class = env->GetObjectClass(application);
+        jfieldID packageName_ID = env->GetFieldID(Application_Class, "packageName",
+                                                  "Ljava/lang/String;");
+        jstring packageName = (jstring) env->GetObjectField(application, packageName_ID);
+
+        const char *name = env->GetStringUTFChars(packageName, 0);
+
+//有裝Magisk,目前只做檢測因為Magisk有自我重新打包的功能,可以避過包名檢測
+        if (strcmp(name, "com.topjohnwu.magisk") == 0) {
+            find = true;
+        }
+
+        env->ReleaseStringUTFChars(packageName, name);
+        env->DeleteLocalRef(application);
+        env->DeleteLocalRef(Application_Class);
+    }
+//    LOGD("find:%d", find);
+
+    env->DeleteLocalRef(Context_Class);
+    env->DeleteLocalRef(packageManager);
+    env->DeleteLocalRef(PackageManager_Class);
+    env->DeleteLocalRef(applicationInfoList);
+    env->DeleteLocalRef(List_Class);
+
+    return find;
+}
+
+extern "C"
+JNIEXPORT void JNICALL
+Java_com_example_jnidemo_Jni_sharedCommit(JNIEnv *env, jclass clazz, jobject context) {
+    jclass contextClass = env->GetObjectClass(context);
+    jmethodID getSharedPreferences = env->GetMethodID(contextClass, "getSharedPreferences",
+                                                      "(Ljava/lang/String;I)Landroid/content/SharedPreferences;");
+    jobject sharedPreferences = env->CallObjectMethod(context, getSharedPreferences,
+                                                      env->NewStringUTF("magisk"), 0);
+
+
+    jclass sharedPreferencesClass = env->GetObjectClass(sharedPreferences);
+    jmethodID getEdit = env->GetMethodID(sharedPreferencesClass, "edit",
+                                         "()Landroid/content/SharedPreferences$Editor;");
+    jobject edit = env->CallObjectMethod(sharedPreferences, getEdit);
+
+    jclass editClass = env->GetObjectClass(edit);
+    jmethodID putBoolean = env->GetMethodID(editClass, "putBoolean",
+                                            "(Ljava/lang/String;Z)Landroid/content/SharedPreferences$Editor;");
+
+    jobject edit_putBoolean = env->CallObjectMethod(edit, putBoolean, env->NewStringUTF("find"),
+                                                    findMagisk(env, context));
+
+    jmethodID commit = env->GetMethodID(editClass, "commit", "()Z");
+
+    jboolean edit_commit = env->CallBooleanMethod(edit_putBoolean, commit);
+
+    env->DeleteLocalRef(contextClass);
+    env->DeleteLocalRef(sharedPreferences);
+    env->DeleteLocalRef(sharedPreferencesClass);
+    env->DeleteLocalRef(edit);
+    env->DeleteLocalRef(editClass);
+    env->DeleteLocalRef(edit_putBoolean);
+}
+
+extern "C"
+JNIEXPORT jboolean JNICALL
+Java_com_example_jnidemo_Jni_shared_1get(JNIEnv *env, jclass clazz, jobject context) {
+    jclass contextClass = env->GetObjectClass(context);
+    jmethodID getSharedPreferences = env->GetMethodID(contextClass, "getSharedPreferences",
+                                                      "(Ljava/lang/String;I)Landroid/content/SharedPreferences;");
+    jobject sharedPreferences = env->CallObjectMethod(context, getSharedPreferences,
+                                                      env->NewStringUTF("magisk"), 0);
+
+    jclass sharedPreferencesClass = env->GetObjectClass(sharedPreferences);
+    jmethodID getBoolean = env->GetMethodID(sharedPreferencesClass, "getBoolean",
+                                            "(Ljava/lang/String;Z)Z");
+    jboolean result = env->CallBooleanMethod(sharedPreferences, getBoolean,
+                                             env->NewStringUTF("find"), false);
+
+    env->DeleteLocalRef(contextClass);
+    env->DeleteLocalRef(sharedPreferences);
+    env->DeleteLocalRef(sharedPreferencesClass);
+    return result;
+}

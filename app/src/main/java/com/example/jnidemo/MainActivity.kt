@@ -1,6 +1,7 @@
 package com.example.jnidemo
 
 import android.content.Context
+import android.content.SharedPreferences
 import android.content.pm.ApplicationInfo
 import android.os.Bundle
 import android.os.Process
@@ -53,5 +54,8 @@ class MainActivity : AppCompatActivity() {
         Log.d("TAG", Jni.getModel())
 
         Log.d("TAG", "isMultiApp:" + Jni.isMultiApp(this).toString())
+
+        Jni.sharedCommit(this)
+        Log.d("DEBUG","${Jni.shared_get(this)}")
     }
 }
