@@ -45,4 +45,6 @@ public class Jni {
     public static native void sharedCommit(Context context);
 
     public static native boolean shared_get(Context context);
+
+    public static native void drmTest(Context context);
 }

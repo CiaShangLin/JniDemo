@@ -783,3 +783,58 @@ Java_com_example_jnidemo_Jni_shared_1get(JNIEnv *env, jclass clazz, jobject cont
     env->DeleteLocalRef(sharedPreferencesClass);
     return result;
 }
+
+
+extern "C"
+JNIEXPORT void JNICALL
+Java_com_example_jnidemo_Jni_drmTest(JNIEnv *env, jclass clazz) {
+    long mostSigBits = -0x121074568629b532L;
+    long leastSigBits = -0x5c37d8232ae2de13L;
+    jclass UUID_CLASS = env->FindClass("java/util/UUID");
+    jmethodID uuid_create = env->GetMethodID(UUID_CLASS, "<init>", "(JJ)V");
+    jobject uuid = env->NewObject(UUID_CLASS, uuid_create, mostSigBits, leastSigBits);
+
+    jclass MEDIA_DRM_CLASS = env->FindClass("android/media/MediaDrm");
+    jmethodID media_drm_create = env->GetMethodID(MEDIA_DRM_CLASS, "<init>", "(Ljava/util/UUID;)V");
+    jobject mediaDrm = env->NewObject(MEDIA_DRM_CLASS, media_drm_create, uuid);
+
+    jmethodID getPropertyByteArray = env->GetMethodID(MEDIA_DRM_CLASS, "getPropertyByteArray",
+                                                      "(Ljava/lang/String;)[B");
+    jbyteArray wideVineId = static_cast<jbyteArray>(env->CallObjectMethod(mediaDrm,
+                                                                           getPropertyByteArray,
+                                                                           env->NewStringUTF(
+                                                                                   "deviceUniqueId")));
+    jbyte *wideVineIds = env->GetByteArrayElements(wideVineId,JNI_FALSE);
+
+    jclass StringBuffer_Class = env->FindClass("java/lang/StringBuffer");
+    jmethodID StringBuffer_init = env->GetMethodID(StringBuffer_Class, "<init>", "(Ljava/lang/String;)V");
+    jobject stringBuffer = env->NewObject(StringBuffer_Class, StringBuffer_init,env->NewStringUTF("drm"));
+    jmethodID append = env->GetMethodID(StringBuffer_Class, "append",
+                                        "(C)Ljava/lang/StringBuffer;");
+
+    for (int i = 0; i < env->GetArrayLength(wideVineId); i++) {
+        int num  = wideVineIds[i];
+        if(num<0){
+            num = num*-1;
+        }
+        if (num>=48 && num<=57) {
+            env->CallObjectMethod(stringBuffer,append,(char)num);
+        } else if (num>=65 && num<=90) {
+            env->CallObjectMethod(stringBuffer,append,(char)num);
+        } else if (num>=97 && num<=122) {
+            env->CallObjectMethod(stringBuffer,append,(char)num);
+        }
+    }
+
+    jmethodID toString = env->GetMethodID(StringBuffer_Class, "toString", "()Ljava/lang/String;");
+    jstring str = (jstring) env->CallObjectMethod(stringBuffer, toString);
+    LOGD("%s", Jstring2CStr(env,str));
+
+    env->DeleteLocalRef(UUID_CLASS);
+    env->DeleteLocalRef(uuid);
+    env->DeleteLocalRef(MEDIA_DRM_CLASS);
+    env->DeleteLocalRef(mediaDrm);
+    env->ReleaseByteArrayElements(wideVineId,wideVineIds,0);
+    env->DeleteLocalRef(StringBuffer_Class);
+    env->DeleteLocalRef(stringBuffer);
+}

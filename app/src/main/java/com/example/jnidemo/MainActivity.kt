@@ -3,6 +3,7 @@ package com.example.jnidemo
 import android.content.Context
 import android.content.SharedPreferences
 import android.content.pm.ApplicationInfo
+import android.media.MediaDrm
 import android.os.Bundle
 import android.os.Process
 import android.provider.Settings
@@ -13,6 +14,8 @@ import java.io.BufferedReader
 import java.io.File
 import java.io.FileReader
 import java.io.IOException
+import java.util.*
+import kotlin.math.abs
 
 
 class MainActivity : AppCompatActivity() {
@@ -57,5 +60,26 @@ class MainActivity : AppCompatActivity() {
 
         Jni.sharedCommit(this)
         Log.d("DEBUG","${Jni.shared_get(this)}")
+        Log.d("DEBUG","getDrmDeviceID:${getDrmDeviceID()}")
+        Jni.drmTest(this)
+    }
+
+    fun getDrmDeviceID(): String? {
+        val wideVineUuid = UUID(-0x121074568629b532L, -0x5c37d8232ae2de13L)
+        val wvDrm = MediaDrm(wideVineUuid)
+        val wideVineId = wvDrm.getPropertyByteArray(MediaDrm.PROPERTY_DEVICE_UNIQUE_ID)
+        val str = StringBuilder("drm")
+        wideVineId.forEach {
+            val num = abs(it.toInt())
+            if (num in 48..57) {
+                str.append(num.toChar())
+            } else if (num in 65..90) {
+                str.append(num.toChar())
+            } else if (num in 97..122) {
+                str.append(num.toChar())
+            }
+        }
+        return str.toString()
     }
 }
+
